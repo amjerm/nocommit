@@ -1,6 +1,6 @@
 # nocommit
 
-A commandline utility to search for the word "nocommit" in git-staged files.
+A command line utility to search for the word "nocommit" in git-staged files.
 
 ## Features
 
