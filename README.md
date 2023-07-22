@@ -5,6 +5,7 @@ A commandline utility to search for the word "nocommit" in git-staged files.
 ## Features
 
 - case-insensitive
+- prints match count and location of each match
 
 ## Planned Features
 
