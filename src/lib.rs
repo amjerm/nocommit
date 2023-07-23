@@ -14,19 +14,30 @@ use termcolor::{self, ColorChoice};
 pub fn run(pattern: &str) {
     let file_list = get_staged_file_list();
     let mut found_matches: u16 = 0;
+    println!("nocommit searching changed files:");
+
+    println!("\nFiles to search:");
+    for file in &file_list {
+        println!("{}", file);
+    }
+    println!("\n");
+
     for file in file_list {
-        println!("searching {}...", file);
         match search_file_for_pattern(pattern, OsString::from(file)) {
             true => found_matches += 1,
             _ => (),
         }
     }
+
     if found_matches > 0 {
-        println!(
-            "{} matches found. Clean them up and try again.",
-            found_matches
-        );
+        if found_matches == 1 {
+            println!("\n\x1b[41mFound matches in {} file!\x1b[0m", found_matches);
+        } else {
+            println!("\n\x1b[41mFound matches in {} files!\x1b[0m", found_matches);
+        }
         exit(1)
+    } else {
+        println!("\nNo matches found.")
     }
 }
 
