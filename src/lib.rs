@@ -15,6 +15,7 @@ use termcolor::{self, ColorChoice};
 pub struct Settings {
     pattern: String,
     staged_only: bool,
+    search_path: Option<OsString>,
 }
 
 #[derive(Parser)]
@@ -23,19 +24,28 @@ pub struct Cli {
     /// Search unstaged files as well
     #[arg(short, long)]
     all_files: bool,
+    /// Path to restrict search to
+    #[arg(short = 'p', long)]
+    search_path: Option<String>,
 }
 
 impl Settings {
     pub fn new(pattern: String, cli: Cli) -> Self {
+        let search_path: Option<OsString> = match cli.search_path {
+            Some(v) => Some(OsString::from(v)),
+            None => None,
+        };
+
         Self {
             pattern,
             staged_only: !cli.all_files,
+            search_path,
         }
     }
 }
 
 pub fn run(settings: Settings) {
-    let file_list = get_staged_file_list(settings.staged_only);
+    let file_list = get_staged_file_list(settings.staged_only, settings.search_path);
     let mut found_matches: u16 = 0;
     println!("nocommit searching changed files...");
 
@@ -85,7 +95,7 @@ fn search_file_for_pattern(pattern: &str, file_path: OsString) -> bool {
     printer.has_written()
 }
 
-fn get_staged_file_list(staged_only: bool) -> Vec<String> {
+fn get_staged_file_list(staged_only: bool, search_path: Option<OsString>) -> Vec<String> {
     let mut diff_args = vec!["diff-index", "--name-status"];
 
     if staged_only {
@@ -93,6 +103,15 @@ fn get_staged_file_list(staged_only: bool) -> Vec<String> {
     }
 
     diff_args.push("HEAD");
+
+    let path_arg;
+    match search_path {
+        Some(v) => {
+            path_arg = v.to_str().unwrap().to_owned();
+            diff_args.push(&path_arg);
+        }
+        None => {}
+    }
 
     let mut diff_result = Command::new("git")
         .args(diff_args)
