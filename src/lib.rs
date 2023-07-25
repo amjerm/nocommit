@@ -1,3 +1,4 @@
+use clap::Parser;
 use grep::{
     cli,
     printer::{ColorSpecs, StandardBuilder},
@@ -11,10 +12,32 @@ use std::{
 };
 use termcolor::{self, ColorChoice};
 
-pub fn run(pattern: &str) {
-    let file_list = get_staged_file_list();
+pub struct Settings {
+    pattern: String,
+    staged_only: bool,
+}
+
+#[derive(Parser)]
+#[command()]
+pub struct Cli {
+    /// Search unstaged files as well
+    #[arg(short, long)]
+    all_files: bool,
+}
+
+impl Settings {
+    pub fn new(pattern: String, cli: Cli) -> Self {
+        Self {
+            pattern,
+            staged_only: !cli.all_files,
+        }
+    }
+}
+
+pub fn run(settings: Settings) {
+    let file_list = get_staged_file_list(settings.staged_only);
     let mut found_matches: u16 = 0;
-    println!("nocommit searching changed files:");
+    println!("nocommit searching changed files...");
 
     println!("\nFiles to search:");
     for file in &file_list {
@@ -22,6 +45,7 @@ pub fn run(pattern: &str) {
     }
     println!("\n");
 
+    let pattern: &str = &settings.pattern;
     for file in file_list {
         match search_file_for_pattern(pattern, OsString::from(file)) {
             true => found_matches += 1,
@@ -61,12 +85,17 @@ fn search_file_for_pattern(pattern: &str, file_path: OsString) -> bool {
     printer.has_written()
 }
 
-fn get_staged_file_list() -> Vec<String> {
+fn get_staged_file_list(staged_only: bool) -> Vec<String> {
+    let mut diff_args = vec!["diff-index", "--name-status"];
+
+    if staged_only {
+        diff_args.push("--cached");
+    }
+
+    diff_args.push("HEAD");
+
     let mut diff_result = Command::new("git")
-        .arg("diff-index")
-        .arg("--name-status")
-        .arg("--cached")
-        .arg("HEAD")
+        .args(diff_args)
         .stdout(Stdio::piped())
         .spawn()
         .expect("Error getting diff");

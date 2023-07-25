@@ -1,5 +1,8 @@
-use nocommit::run;
+use clap::Parser;
+use nocommit::{run, Cli, Settings};
 
 fn main() {
-    run("nocommit")
+    let arguments = Cli::parse();
+    let settings = Settings::new(String::from("nocommit"), arguments);
+    run(settings)
 }
