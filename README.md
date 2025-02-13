@@ -1,6 +1,6 @@
 # nocommit
 
-**NOTE: Moved to [Codeberge](https://codeberg.org/amjerm/nocommit)**
+**NOTE: Moved to [Codeberg](https://codeberg.org/amjerm/nocommit)**
 
 A command line utility to search for the word "nocommit" in git-staged files.
 
